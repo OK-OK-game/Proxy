@@ -45,11 +45,25 @@ async function runTests() {
         assert(res.body.includes('<html'), 'body contains HTML from the target');
     }
 
-    console.log('\nTest 3: Proxy returns error for invalid URL');
+    console.log('\nTest 3: Proxy returns 400 for failed connection to invalid host');
     {
         const res = await fetch('/?url=https://nonexistent.invalid.domain.xyz');
-        assert(res.statusCode === 500, 'status code is 500 on tunnel error');
-        assert(res.body.includes('Tunnel Error'), 'body contains "Tunnel Error" message');
+        assert(res.statusCode === 400, 'status code is 400 on connection failure');
+        assert(res.body.includes('Bad Request'), 'body contains "Bad Request" message');
+    }
+
+    console.log('\nTest 4b: Proxy returns 400 for malformed URL (no protocol/hostname)');
+    {
+        const res = await fetch('/?url=not-a-valid-url');
+        assert(res.statusCode === 400, 'status code is 400 for invalid URL');
+        assert(res.body.includes('Invalid or unsupported URL'), 'body explains the URL is invalid');
+    }
+
+    console.log('\nTest 4c: Proxy returns 400 for non-http protocol (ftp)');
+    {
+        const res = await fetch('/?url=ftp://example.com');
+        assert(res.statusCode === 400, 'status code is 400 for unsupported protocol');
+        assert(res.body.includes('http and https URLs are allowed'), 'body explains only http/https allowed');
     }
 
     console.log('\nTest 4: CORS headers are present');

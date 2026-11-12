@@ -19,6 +19,14 @@ const server = http.createServer((req, res) => {
     }
 
     const parsedTarget = url.parse(targetUrl);
+
+    // Validate the target URL
+    if (!parsedTarget.hostname || !parsedTarget.protocol || !/^https?:$/.test(parsedTarget.protocol)) {
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('Bad Request: Invalid or unsupported URL. Only http and https URLs are allowed.');
+        return;
+    }
+
     const options = {
         hostname: parsedTarget.hostname,
         path: parsedTarget.path,
@@ -32,8 +40,8 @@ const server = http.createServer((req, res) => {
     });
 
     clientReq.on('error', (err) => {
-        res.writeHead(500);
-        res.end('Tunnel Error: ' + err.message);
+        res.writeHead(400, { 'Content-Type': 'text/plain' });
+        res.end('Bad Request: Failed to connect to the target URL — ' + err.message);
     });
 
     req.pipe(clientReq);
